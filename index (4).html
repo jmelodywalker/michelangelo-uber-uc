@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Michelangelo OSS Business Use Case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #F8F7F5; --bg-card: #FFFFFF; --bg-dark: #1A1A1A;
+    --text-primary: #1A1A1A; --text-secondary: #5A5A5A; --text-muted: #909090;
+    --border: #E2E2DE; --border-strong: #C4C4C0; --accent-bg: #E8E6E1;
+    --green-pass: #2D7A4F; --red-fail: #B03030; --sidebar-w: 210px;
+  }
+  body { font-family: system-ui,-apple-system,'Segoe UI',sans-serif; background: var(--bg); color: var(--text-primary); font-size: 14px; line-height: 1.65; }
+
+  /* LAYOUT */
+  .page-wrap { display: flex; min-height: 100vh; }
+  .sidebar { width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; border-right: 1px solid var(--border); background: var(--bg); padding: 40px 16px 40px 20px; }
+  .sidebar-label { font-family: 'DM Mono',monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 18px; }
+  .sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+  .sidebar-nav a { display: block; font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); text-decoration: none; padding: 5px 8px; border-radius: 3px; line-height: 1.4; transition: color 0.15s, background 0.15s; }
+  .sidebar-nav a:hover { color: var(--text-primary); background: var(--border); }
+  .sidebar-nav .nav-section { color: var(--text-secondary); }
+  .nav-divider { height: 1px; background: var(--border); margin: 10px 0; }
+  .main-area { flex: 1; min-width: 0; }
+  .container { max-width: 800px; margin: 0 auto; padding: 0 40px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 52px 0; }
+
+  /* HERO */
+  .hero { padding: 72px 0 48px; }
+  .hero-eyebrow { font-family: 'DM Mono',monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 22px; }
+  .hero-title { font-family: system-ui,-apple-system,'Segoe UI',sans-serif; font-size: 54px; line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 22px; }
+  .hero-subtitle-wrap { margin-bottom: 16px; }
+  .hero-subtitle { background: var(--accent-bg); font-size: 15px; line-height: 1.6; display: inline; padding: 2px 4px; }
+  .hero-byline { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .tag { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--border-strong); padding: 4px 10px; color: var(--text-secondary); }
+  .hero-disclaimer { font-size: 12px; font-style: italic; color: var(--text-muted); line-height: 1.5; }
+
+  /* SECTION CHROME */
+  .section { padding: 52px 0; }
+  .section-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .section-num { font-family: 'DM Mono',monospace; font-size: 12px; color: var(--text-muted); }
+  .section-title { font-family: 'EB Garamond',Georgia,serif; font-size: 36px; font-weight: 600; }
+  .section-sub { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.55; }
+
+  /* VIDEO */
+  .video-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+  .video-box { background: #141414; aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  .video-box-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; }
+  .video-box-headline { font-family: 'EB Garamond',Georgia,serif; font-size: 22px; color: #DADADA; text-align: center; padding: 0 52px; line-height: 1.35; }
+  .video-box-file { font-family: 'DM Mono',monospace; font-size: 11px; color: #444; }
+  .video-meta { display: flex; justify-content: space-between; margin-top: 8px; }
+  .video-meta span { font-family: 'DM Mono',monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+  /* THESIS FLOW */
+  .thesis-flow { padding: 40px 0; }
+  .flow-stack { display: flex; flex-direction: column; }
+  .flow-card { background: var(--bg-card); border: 1px solid var(--border); padding: 24px 28px; }
+  .flow-connector { display: flex; align-items: center; justify-content: center; padding: 10px 0; font-size: 20px; color: var(--text-muted); }
+  .flow-card-layer { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .flow-card-title { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+  .flow-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .flow-pill { font-family: 'DM Mono',monospace; font-size: 11px; padding: 4px 12px; background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); }
+
+  /* TOOL CARDS */
+  .tools-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+  .tool-card { background: var(--bg-card); border: 1px solid var(--border); padding: 20px; }
+  .tool-header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .tool-name { font-size: 13px; font-weight: 600; }
+  .tool-link-tag { font-family: 'DM Mono',monospace; font-size: 10px; color: var(--text-muted); }
+  .tool-type { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 6px 0 14px; }
+  .tool-glyph { height: 56px; display: flex; align-items: center; margin-bottom: 14px; }
+  .tool-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
+
+  /* CONTEXTEVAL */
+  .ce-wrap { background: var(--bg-card); border: 1px solid var(--border); padding: 36px; }
+  .ce-eyebrow { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .ce-title { font-size: 18px; font-weight: 600; margin-bottom: 36px; }
+  .ce-flow { display: flex; flex-direction: column; align-items: center; }
+  .ce-node { width: 100%; max-width: 500px; border: 1px solid var(--border); background: var(--bg); padding: 18px 22px; text-align: center; }
+  .ce-node.gate { border-color: #1A1A1A; background: #1A1A1A; }
+  .ce-node-step { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+  .ce-node.gate .ce-node-step { color: #888; }
+  .ce-node.gate .ce-node-name { color: #FFF; }
+  .ce-node.gate .ce-node-detail { color: #AAA; }
+  .ce-node-name { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+  .ce-node-detail { font-size: 12px; color: var(--text-secondary); }
+  .ce-arrow { padding: 10px 0; font-size: 18px; color: var(--text-muted); text-align: center; }
+  .ce-outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; max-width: 500px; }
+  .ce-outcome { border: 1px solid var(--border); padding: 18px; text-align: center; }
+  .ce-outcome.pass { border-color: var(--green-pass); background: #F0FAF4; }
+  .ce-outcome.fail { border-color: var(--red-fail); background: #FEF5F5; }
+  .ce-outcome-status { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .ce-outcome.pass .ce-outcome-status { color: var(--green-pass); }
+  .ce-outcome.fail .ce-outcome-status { color: var(--red-fail); }
+  .ce-outcome-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .ce-outcome-sub { font-size: 11px; color: var(--text-secondary); }
+  .ce-caption { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; font-style: italic; color: var(--text-secondary); line-height: 1.6; max-width: 500px; text-align: center; align-self: center; }
+
+  /* ISSUE CARD */
+  .issue-eyebrow { font-family: 'DM Mono',monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+  .issue-title { font-family: 'EB Garamond',Georgia,serif; font-size: 34px; font-weight: 600; margin-bottom: 24px; }
+  .issue-card { background: var(--bg-card); border: 1px solid var(--border); padding: 24px; margin-bottom: 30px; }
+  .issue-card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .issue-labels { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .issue-meta { display: grid; grid-template-columns: auto 1fr; gap: 5px 16px; font-family: 'DM Mono',monospace; font-size: 11px; }
+  .issue-meta-k { color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .issue-meta-v { color: var(--text-secondary); }
+  .issue-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 30px; }
+  .icol-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  .icol-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+  .cp-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+  .cp-steps { display: flex; flex-direction: column; gap: 9px; margin-bottom: 32px; }
+  .cp-step { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+  .cp-num { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); min-width: 22px; }
+  .cta-block { background: var(--bg-dark); color: #E0E0E0; padding: 24px 28px; font-size: 15px; line-height: 1.55; }
+
+  /* GITHUB LABEL PILLS */
+  .gh-label { display: inline-flex; align-items: center; font-family: 'DM Mono',monospace; font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 2em; border: none; white-space: nowrap; }
+  .gh-good-first-issue { background: #7057ff; color: #fff; }
+  .gh-missing-feature  { background: #4fd4c4; color: #0e1116; }
+  .gh-refactoring      { background: #0075ca; color: #fff; }
+  .gh-bug              { background: #d73a4a; color: #fff; }
+  .gh-public-readiness { background: #8250df; color: #fff; }
+  .gh-documentation    { background: #0052cc; color: #fff; }
+  .gh-enhancement      { background: #a2eeef; color: #0e1116; }
+  .gh-tech-debt        { background: #e4e669; color: #0e1116; }
+  .gh-task             { background: #f5d742; color: #0e1116; }
+
+  /* EXEC SUMMARY */
+  .exec-list { display: flex; flex-direction: column; gap: 16px; margin-top: 24px; }
+  .exec-item { display: flex; gap: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.65; }
+  .exec-num { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); min-width: 22px; padding-top: 2px; }
+
+  /* OBJECTIVE TABLE */
+  .obj-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 24px; }
+  .obj-table th { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border-strong); }
+  .obj-table td { padding: 13px 12px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-secondary); line-height: 1.55; }
+  .obj-table td:first-child { font-weight: 600; color: var(--text-primary); font-size: 12.5px; }
+  .obj-table tr:last-child td { border-bottom: none; }
+
+  /* ARCH STACK */
+  .arch-stack { display: flex; flex-direction: column; gap: 2px; margin-top: 24px; }
+  .arch-layer { display: grid; grid-template-columns: 176px 1fr; border: 1px solid var(--border); }
+  .arch-label { background: var(--bg-dark); padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; }
+  .arch-num { font-family: 'DM Mono',monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 4px; }
+  .arch-name { font-size: 12px; font-weight: 600; color: #E0E0E0; }
+  .arch-content { background: var(--bg-card); padding: 14px 16px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .arch-pill { font-family: 'DM Mono',monospace; font-size: 11px; padding: 3px 10px; background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); }
+
+  /* OSS VS IN-HOUSE */
+  .oss-cols { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); margin-top: 24px; }
+  .oss-col { padding: 24px; }
+  .oss-col:first-child { border-right: 1px solid var(--border); }
+  .oss-col-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+  .oss-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .oss-item { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+  .oss-quote { margin-top: 24px; font-size: 14px; font-style: italic; color: var(--text-secondary); line-height: 1.65; border-left: 3px solid var(--border-strong); padding-left: 16px; }
+
+  /* SOURCE */
+  .source-card { background: var(--bg-card); border: 1px solid var(--border); padding: 28px; }
+  .source-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  .source-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; line-height: 1.4; }
+  .source-authors { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .source-pub { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); margin-bottom: 22px; }
+  .source-points-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
+  .source-points { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .source-point { font-size: 13px; color: var(--text-secondary); padding-left: 12px; border-left: 2px solid var(--border); line-height: 1.55; }
+  .source-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 20px; font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-secondary); text-decoration: none; border-bottom: 1px solid var(--border); padding-bottom: 2px; }
+
+  /* GLOSSARY */
+  .glossary-intro { font-size: 13px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 36px; }
+  .glossary-intro code { font-family: 'DM Mono',monospace; font-size: 12px; background: var(--border); padding: 1px 5px; }
+  .glossary-bucket { margin-bottom: 52px; }
+  .bucket-header { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 2px solid var(--border-strong); }
+  .bucket-num { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+  .bucket-title { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
+  .bucket-desc { font-size: 12px; color: var(--text-muted); font-style: italic; }
+  .glossary-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); }
+  .glossary-table th { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border-strong); background: var(--bg); }
+  .glossary-table td { padding: 16px 14px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.55; }
+  .glossary-table tr:last-child td { border-bottom: none; }
+  .g-num { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); white-space: nowrap; width: 52px; }
+  .g-title { font-size: 13px; color: var(--text-primary); margin-bottom: 7px; line-height: 1.4; font-weight: 500; }
+  .g-title code { font-family: 'DM Mono',monospace; font-size: 11px; background: var(--border); padding: 1px 4px; font-weight: 400; }
+  .g-labels { display: flex; flex-wrap: wrap; gap: 5px; }
+  .g-translation { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+
+  /* FOOTER */
+  .footer { padding: 48px 0 72px; border-top: 1px solid var(--border); }
+  .footer-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+  .footer-tag { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); }
+  .footer-coming-label { font-family: 'DM Mono',monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+  .footer-coming-items { font-size: 13px; color: var(--text-secondary); margin-bottom: 32px; }
+  .footer-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+  .footer-meta { font-size: 12px; font-style: italic; color: var(--text-muted); line-height: 1.6; }
+  .footer-sig { font-family: 'DM Mono',monospace; font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* RESPONSIVE */
+  @media (max-width: 960px) { .sidebar { display: none; } .container { padding: 0 24px; } }
+  @media (max-width: 640px) {
+    .hero-title { font-size: 38px; }
+    .tools-grid { grid-template-columns: 1fr; }
+    .issue-cols, .oss-cols, .ce-outcomes { grid-template-columns: 1fr; }
+    .oss-col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+    .arch-layer { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; gap: 12px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Contents</div>
+    <ul class="sidebar-nav">
+      <li><a href="#hero">Overview</a></li>
+      <li><a href="#demo">Demo video</a></li>
+      <li><a href="#glossary">Issue glossary</a></li>
+      <li><a href="#issue-1075">Issue #1075</a></li>
+      <li><a href="#tools">Supporting tools</a></li>
+      <li><a href="#contexteval">ContextEval flow</a></li>
+      <li><a href="#thesis">Platform strategy</a></li>
+      <div class="nav-divider"></div>
+      <li><a href="#exec" class="nav-section">§ 01 Executive summary</a></li>
+      <li><a href="#objectives" class="nav-section">§ 02 Objectives</a></li>
+      <li><a href="#architecture" class="nav-section">§ 03 Architecture</a></li>
+      <li><a href="#oss" class="nav-section">§ 04 OSS vs in-house</a></li>
+      <li><a href="#source" class="nav-section">§ 05 Source article</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main-area">
+  <div class="container">
+
+    <!-- HERO -->
+    <div class="hero" id="hero">
+      <div class="hero-eyebrow">How Uber Optimizes LLM Training · April 2026</div>
+      <h1 class="hero-title">Michelangelo OSS<br>Business Use Case</h1>
+      <div class="hero-subtitle-wrap"><span class="hero-subtitle">Meet Michelangelo. Uber's Machine Learning Platform.</span></div>
+      <div class="hero-byline">By Jade Melody Walker</div>
+      <div class="tags"><span class="tag">AI Infrastructure</span><span class="tag">ML Platform</span><span class="tag">Open Source</span></div>
+      <p class="hero-disclaimer">Independent business use case based on public engineering materials. Not affiliated with Uber.</p>
+    </div>
+
+
+    <!-- DEMO VIDEO -->
+    <div id="demo" style="padding:32px 0 0;">
+      <div class="video-label">Demo video</div>
+      <div class="video-box">
+        <div class="video-box-label">Walkthrough · ~4 min</div>
+        <div class="video-box-headline">Your first ML Michelangelo OSS pull request: pipeline reruns and auto-flip</div>
+        <div class="video-box-file">[ video file goes here ]</div>
+      </div>
+      <div class="video-meta"><span>FILE: ma-oss-1075-walkthrough.mp4</span><span>UBER · MA OSS</span></div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §06 ISSUE GLOSSARY -->
+    <div class="section" id="glossary">
+      <div class="section-head"><span class="section-num">§ 06</span><h2 class="section-title">Issue glossary</h2></div>
+      <p class="glossary-intro">20 real open issues from <code>michelangelo-ai/michelangelo</code>, sorted into 5 buckets. Dense engineering language translated into practitioner-readable framing.</p>
+
+      <!-- BUCKET 1 -->
+      <div class="glossary-bucket">
+        <div class="bucket-header">
+          <div class="bucket-num">Bucket 01 / 05</div>
+          <div class="bucket-title">Pipeline &amp; Trigger Lifecycle</div>
+          <div class="bucket-desc">How jobs are scheduled, versioned, retried, and cleaned up</div>
+        </div>
+        <table class="glossary-table">
+          <thead><tr><th>#</th><th>Issue</th><th>What it actually means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="g-num">#1075</td>
+              <td><div class="g-title">Support trigger batch rerun and auto flip due to pipeline revision</div><div class="g-labels"><span class="gh-label gh-good-first-issue">good first issue</span><span class="gh-label gh-missing-feature">missing-feature</span></div></td>
+              <td class="g-translation">When you update your pipeline, scheduled triggers don't pick up the new version automatically. You have to manually rewire them one by one. This adds the runtime logic that should have shipped with the feature.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#1091</td>
+              <td><div class="g-title">Support Pipeline Cascade Delete</div><div class="g-labels"><span class="gh-label gh-missing-feature">missing-feature</span></div></td>
+              <td class="g-translation">Deleting a pipeline doesn't clean up the jobs and resources attached to it. You delete the parent; the children stay orphaned. Cascade delete fixes the cleanup gap.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#1055</td>
+              <td><div class="g-title">Support trigger run creation and more detailed trigger run display page</div><div class="g-labels"><span class="gh-label gh-missing-feature">missing-feature</span></div></td>
+              <td class="g-translation">You can set up triggers but you can't see meaningful detail about what ran, when, or why it failed. This adds both the creation surface and the observability page.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#793</td>
+              <td><div class="g-title">Support pipeline run retry with immutable pipeline run state</div></td>
+              <td class="g-translation">If a pipeline run fails, there's no retry mechanism — you'd recreate from scratch. This adds retry while keeping the original run record intact so your history stays clean.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BUCKET 2 -->
+      <div class="glossary-bucket">
+        <div class="bucket-header">
+          <div class="bucket-num">Bucket 02 / 05</div>
+          <div class="bucket-title">CLI &amp; Developer Tooling (mactl)</div>
+          <div class="bucket-desc">The developer entry surface — commands, config, scaffolding</div>
+        </div>
+        <table class="glossary-table">
+          <thead><tr><th>#</th><th>Issue</th><th>What it actually means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="g-num">#946</td>
+              <td><div class="g-title">Add root-level Makefile to simplify developer setup and build commands</div></td>
+              <td class="g-translation">Getting the project running locally requires knowing which commands to run in which order. A Makefile turns that into one command. The difference between "clone and figure it out" and "clone and contribute."</td>
+            </tr>
+            <tr>
+              <td class="g-num">#937</td>
+              <td><div class="g-title">Auto-generate mactl config templates from CRD spec</div></td>
+              <td class="g-translation">Config templates for the CLI are hand-written and can drift from what the schema actually supports. Auto-generating from the CRD spec keeps templates accurate without manual maintenance.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#936</td>
+              <td><div class="g-title">Auto-generate CLI arguments from CRD OpenAPI schema</div></td>
+              <td class="g-translation">CLI flags get out of sync with the API schema over time. Generating them from the schema source keeps the developer surface honest — same problem as above, one layer up.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#934</td>
+              <td><div class="g-title">MaCTL support for <code>worker_queue</code> annotation on Project CRD</div></td>
+              <td class="g-translation">The <code>worker_queue</code> annotation exists in the platform spec but the CLI doesn't expose it. You can set it in YAML but can't interact with it through <code>mactl</code>. This closes the gap.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BUCKET 3 -->
+      <div class="glossary-bucket">
+        <div class="bucket-header">
+          <div class="bucket-num">Bucket 03 / 05</div>
+          <div class="bucket-title">Platform Schema (K8s / CRD / Spec)</div>
+          <div class="bucket-desc">How the platform's resource definitions align to Kubernetes standards</div>
+        </div>
+        <table class="glossary-table">
+          <thead><tr><th>#</th><th>Issue</th><th>What it actually means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="g-num">#932</td>
+              <td><div class="g-title">Replace <code>hdfs_delegation_token</code> plain string with K8s Secret reference</div></td>
+              <td class="g-translation">Credentials for data access are stored as plain strings in config. This moves them to K8s Secrets — how every security-conscious platform handles sensitive values.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#931</td>
+              <td><div class="g-title">Replace <code>ResourceSpec</code> custom types with K8s <code>resource.Quantity</code></div></td>
+              <td class="g-translation">The platform defined its own resource types instead of using the K8s standard. This creates friction for anyone who already knows Kubernetes. This issue aligns the schema to the ecosystem standard.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#929</td>
+              <td><div class="g-title">Add priority information to <code>JobPrioritySpec</code></div></td>
+              <td class="g-translation">There's a spec object for job priority but it doesn't carry priority data yet. You can reference it but it doesn't do anything. This adds the substance behind the structure.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#928</td>
+              <td><div class="g-title">Add inter-job and anti-affinity to <code>JobSchedulingSpec</code></div></td>
+              <td class="g-translation">You can't tell the platform "don't run these two jobs on the same node." Standard K8s scheduling controls, not yet exposed at the job spec level.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BUCKET 4 -->
+      <div class="glossary-bucket">
+        <div class="bucket-header">
+          <div class="bucket-num">Bucket 04 / 05</div>
+          <div class="bucket-title">Documentation &amp; Public Readiness</div>
+          <div class="bucket-desc">What blocks external contributors from day one</div>
+        </div>
+        <table class="glossary-table">
+          <thead><tr><th>#</th><th>Issue</th><th>What it actually means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="g-num">#822</td>
+              <td><div class="g-title">Documentation Website Polish for Open-Source Launch</div><div class="g-labels"><span class="gh-label gh-documentation">documentation</span><span class="gh-label gh-public-readiness">public-readiness</span></div></td>
+              <td class="g-translation">The docs site exists but isn't ready for external eyes — navigation, structure, and presentation still reflect an internal-first audience. This is the public launch polish pass.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#771</td>
+              <td><div class="g-title">Document: Single Docker container for developer onboarding</div><div class="g-labels"><span class="gh-label gh-public-readiness">public-readiness</span></div></td>
+              <td class="g-translation">There's no single-container setup for someone who wants to run Michelangelo locally and start contributing. This is the "zero to running" gap that blocks every new external contributor.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#770</td>
+              <td><div class="g-title">Document: YAML Configuration — Key concepts &amp; terms</div><div class="g-labels"><span class="gh-label gh-public-readiness">public-readiness</span></div></td>
+              <td class="g-translation">The YAML config is how practitioners interact with the platform daily. No glossary. No term definitions. Engineers have to reverse-engineer what each field does from the schema.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#1057</td>
+              <td><div class="g-title">docs: ingester-design.md incorrectly claims ingester watches 13 CRDs (actually 0 since PR #1012)</div></td>
+              <td class="g-translation">The architecture docs describe behavior that a merged PR already changed. External contributors are building a mental model of a system that no longer exists.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BUCKET 5 -->
+      <div class="glossary-bucket">
+        <div class="bucket-header">
+          <div class="bucket-num">Bucket 05 / 05</div>
+          <div class="bucket-title">UI &amp; Workflow Visibility</div>
+          <div class="bucket-desc">What practitioners can see and act on inside the platform</div>
+        </div>
+        <table class="glossary-table">
+          <thead><tr><th>#</th><th>Issue</th><th>What it actually means</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="g-num">#1094</td>
+              <td><div class="g-title">UI not display workflow DAG as defined in python code</div></td>
+              <td class="g-translation">You define your pipeline in Python and the visual interface is supposed to reflect it. It doesn't. The DAG view and the code are out of sync — breaking the primary feedback loop for pipeline authors.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#1088</td>
+              <td><div class="g-title">Restructure test files into nested describes</div><div class="g-labels"><span class="gh-label gh-good-first-issue">good first issue</span><span class="gh-label gh-refactoring">refactoring</span></div></td>
+              <td class="g-translation">Test files are flat with no logical grouping by feature or behavior. When a test fails, it's hard to tell what it's testing. Nested describes make the test suite readable and contributor-friendly.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#927</td>
+              <td><div class="g-title">Project phase transitions have no side effects</div></td>
+              <td class="g-translation">Moving a project between lifecycle phases (draft → active → archived) should trigger downstream behaviors. Currently the state changes but nothing else responds.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#836</td>
+              <td><div class="g-title">Failure to connect temporal requires TLS</div></td>
+              <td class="g-translation">The workflow orchestration layer fails to connect when TLS is required — a standard configuration in any production or security-conscious environment. Blocks deployment in hardened infra.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#442</td>
+              <td><div class="g-title">Add loading state to Execution component and integrate with Detail page rendering</div><div class="g-labels"><span class="gh-label gh-bug">bug</span><span class="gh-label gh-good-first-issue">good first issue</span></div></td>
+              <td class="g-translation">The Execution component renders immediately with no loading state. While data is fetching, the UI shows nothing or stale content. Adds the standard loading pattern so the page feels intentional, not broken.</td>
+            </tr>
+            <tr>
+              <td class="g-num">#349</td>
+              <td><div class="g-title">Update detail view header to display truncated titles in a tooltip</div><div class="g-labels"><span class="gh-label gh-enhancement">enhancement</span><span class="gh-label gh-good-first-issue">good first issue</span></div></td>
+              <td class="g-translation">Long pipeline or job names get cut off in the header with no way to see the full title. Adds a tooltip so engineers can always read the full name without navigating away.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /glossary -->
+
+    <hr class="divider">
+
+    <!-- ISSUE #1075 -->
+    <div id="issue-1075">
+      <div class="issue-eyebrow">Issue</div>
+      <h2 class="issue-title">#1075 walkthrough</h2>
+      <div class="issue-card">
+        <div class="issue-card-title">Support trigger batch rerun and auto flip due to pipeline revision</div>
+        <div class="issue-labels">
+          <span class="gh-label gh-good-first-issue">good first issue</span>
+          <span class="gh-label gh-missing-feature">missing-feature</span>
+        </div>
+        <div class="issue-meta">
+          <span class="issue-meta-k">repo:</span><span class="issue-meta-v">github.com/michelangelo-ai/michelangelo</span>
+          <span class="issue-meta-k">docs:</span><span class="issue-meta-v">michelangelo-ai.github.io/michelangelo</span>
+          <span class="issue-meta-k">issue:</span><span class="issue-meta-v">github.com/michelangelo-ai/michelangelo/issues/1075</span>
+        </div>
+      </div>
+      <div class="issue-cols">
+        <div><div class="icol-label">The problem</div><div class="icol-text">Trigger runs with failed pipeline runs require manual re-triggering one by one. Triggers also pin to a specific pipeline revision — when a new revision registers, the trigger does not auto-flip. The auto_flip field is already in the YAML schema and protobuf spec. The runtime logic is missing.</div></div>
+        <div><div class="icol-label">The translation</div><div class="icol-text">This is how I translate this from my last project — production enterprise batch processing world. A scheduled job fails. It holds up the rest of the batch. Operations gets the call. The failed step gets skipped so the rest of the batch keeps moving, and the failure gets inspected the next morning — usually a vendor file that did not arrive on time. Auto-flip is the same operator instinct: when a new revision registers upstream, the system picks it up without a human recreating the trigger. The vocabulary changes across ecosystems. The problem does not.</div></div>
+      </div>
+      <div class="cp-label">Contributor path</div>
+      <div class="cp-steps">
+        <div class="cp-step"><span class="cp-num">01</span><span>Read the issue body — solution shape is already scoped into two parts.</span></div>
+        <div class="cp-step"><span class="cp-num">02</span><span>Comment on the issue to scope the work and ask whether to ship batch rerun and auto-flip as one PR or two.</span></div>
+        <div class="cp-step"><span class="cp-num">03</span><span>Fork the repo, branch, and locate the trigger runtime in the codebase.</span></div>
+        <div class="cp-step"><span class="cp-num">04</span><span>Activate the dormant auto_flip runtime logic; add the batch rerun CLI surface (ma trigger_run rerun).</span></div>
+        <div class="cp-step"><span class="cp-num">05</span><span>Write tests, open a PR linking back to #1075 with "Closes #1075".</span></div>
+        <div class="cp-step"><span class="cp-num">06</span><span>Iterate on maintainer review. Merge ships in the next release.</span></div>
+      </div>
+      <div class="cta-block">If you take this issue on, tag me. I want to see this PR closed.</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- TOOL CARDS -->
+    <div id="tools">
+      <div class="section-label">Supporting work · Public repos</div>
+      <div class="tools-grid">
+        <div class="tool-card">
+          <div class="tool-header"><span class="tool-name">Token-estimator</span><span class="tool-link-tag">→ repo</span></div>
+          <div class="tool-type">Pre-deployment cost planning</div>
+          <div class="tool-glyph"><svg width="88" height="52" viewBox="0 0 88 52"><rect x="4" y="40" width="11" height="8" fill="#D0D0CC"/><rect x="20" y="30" width="11" height="18" fill="#B0B0B8"/><rect x="36" y="20" width="11" height="28" fill="#9090A8"/><rect x="52" y="10" width="11" height="38" fill="#7070A0"/><rect x="68" y="2" width="11" height="46" fill="#5050A0"/></svg></div>
+          <div class="tool-desc">CLI that gives ML engineers token count and cost transparency before a single API call ships to production.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-header"><span class="tool-name">ContextEval</span><span class="tool-link-tag">→ repo</span></div>
+          <div class="tool-type">RAG grounding enforcement</div>
+          <div class="tool-glyph"><svg width="88" height="52" viewBox="0 0 88 52" overflow="visible"><defs><marker id="a1" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#A0A0B8" stroke-width="1.5"/></marker></defs><rect x="2" y="16" width="22" height="18" rx="2" fill="none" stroke="#A0A0B8" stroke-width="1.5"/><text x="13" y="28" font-size="8" fill="#A0A0B8" text-anchor="middle" font-family="monospace">corpus</text><line x1="24" y1="25" x2="40" y2="25" stroke="#A0A0B8" stroke-width="1.5" marker-end="url(#a1)"/><rect x="40" y="16" width="22" height="18" rx="2" fill="none" stroke="#7070A0" stroke-width="1.5"/><text x="51" y="28" font-size="8" fill="#7070A0" text-anchor="middle" font-family="monospace">gate</text><line x1="62" y1="25" x2="78" y2="25" stroke="#A0A0B8" stroke-width="1.5" marker-end="url(#a1)"/><circle cx="82" cy="25" r="5" fill="#2D7A4F"/></svg></div>
+          <div class="tool-desc">Returns answers only when information exists in the defined corpus. Closes the hallucination gap in production RAG pipelines.</div>
+        </div>
+        <div class="tool-card">
+          <div class="tool-header"><span class="tool-name">Trace-bench</span><span class="tool-link-tag">→ repo</span></div>
+          <div class="tool-type">Output stability + regression</div>
+          <div class="tool-glyph"><svg width="88" height="52" viewBox="0 0 88 52"><polyline points="4,44 18,34 32,36 44,22 56,30 68,18 80,24" fill="none" stroke="#9090A8" stroke-width="1.5"/><polyline points="4,42 18,32 32,38 44,20 56,32 68,20 80,26" fill="none" stroke="#5050A0" stroke-width="1.5" stroke-dasharray="3,2"/></svg></div>
+          <div class="tool-desc">Benchmarks model behavior across versions to surface silent drift and regression in ML serving layers.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- CONTEXTEVAL FLOW -->
+    <div id="contexteval">
+      <div class="section-label">Technical storytelling · ContextEval</div>
+      <div class="ce-wrap">
+        <div class="ce-eyebrow">ContextEval · RAG grounding enforcement pipeline</div>
+        <div class="ce-title">How production RAG pipelines close the hallucination gap</div>
+        <div class="ce-flow">
+          <div class="ce-node"><div class="ce-node-step">Input</div><div class="ce-node-name">User Query</div><div class="ce-node-detail">Natural language question submitted to the pipeline</div></div>
+          <div class="ce-arrow">↓</div>
+          <div class="ce-node"><div class="ce-node-step">Step 01 — Retrieval</div><div class="ce-node-name">Corpus Search</div><div class="ce-node-detail">FAISS index · Chunked document store · Similarity ranking</div></div>
+          <div class="ce-arrow">↓</div>
+          <div class="ce-node gate"><div class="ce-node-step">Step 02 — Gate</div><div class="ce-node-name">Confidence Threshold Check</div><div class="ce-node-detail">Retrieval score meets threshold → pass &nbsp;·&nbsp; Below threshold → refuse</div></div>
+          <div class="ce-arrow">↓</div>
+          <div class="ce-outcomes">
+            <div class="ce-outcome pass"><div class="ce-outcome-status">Pass</div><div class="ce-outcome-title">Grounded answer</div><div class="ce-outcome-sub">Response sourced from corpus only</div></div>
+            <div class="ce-outcome fail"><div class="ce-outcome-status">Fail</div><div class="ce-outcome-title">"Not in corpus"</div><div class="ce-outcome-sub">Refuses to answer. No hallucination.</div></div>
+          </div>
+          <div class="ce-caption">The strategic value: ContextEval applies the same production discipline to RAG pipelines that batch systems apply to data contracts — if the record doesn't exist in the source, the system doesn't invent one.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- THESIS FLOW -->
+    <div class="thesis-flow" id="thesis">
+      <div class="section-label">Platform strategy · Visual thesis</div>
+      <div class="flow-stack">
+        <div class="flow-card">
+          <div class="flow-card-layer">Layer A — Supply</div>
+          <div class="flow-card-title">Open-source ecosystem</div>
+          <div class="flow-pills"><span class="flow-pill">Llama 2 / 3</span><span class="flow-pill">Mixtral</span><span class="flow-pill">Ray</span><span class="flow-pill">PyTorch</span><span class="flow-pill">DeepSpeed</span><span class="flow-pill">Hugging Face</span><span class="flow-pill">vLLM</span><span class="flow-pill">LoRA / QLoRA</span></div>
+        </div>
+        <div class="flow-connector">↓</div>
+        <div class="flow-card">
+          <div class="flow-card-layer">Layer B — Conversion</div>
+          <div class="flow-card-title">Michelangelo platform layer</div>
+          <div class="flow-pills"><span class="flow-pill">training</span><span class="flow-pill">orchestration</span><span class="flow-pill">scoring</span><span class="flow-pill">resource scheduling</span><span class="flow-pill">model lifecycle</span><span class="flow-pill">federation</span></div>
+        </div>
+        <div class="flow-connector">↓</div>
+        <div class="flow-card">
+          <div class="flow-card-layer">Layer C — Application</div>
+          <div class="flow-card-title">Uber-scale production systems</div>
+          <div class="flow-pills"><span class="flow-pill">search</span><span class="flow-pill">recommendations</span><span class="flow-pill">support chatbots</span><span class="flow-pill">code generation</span><span class="flow-pill">SQL generation</span></div>
+        </div>
+        <div class="flow-connector">↓</div>
+        <div class="flow-card">
+          <div class="flow-card-layer">Layer D — Outcomes</div>
+          <div class="flow-card-title">Business outcomes</div>
+          <div class="flow-pills"><span class="flow-pill">speed</span><span class="flow-pill">scale</span><span class="flow-pill">cost control</span><span class="flow-pill">reliability</span><span class="flow-pill">production readiness</span></div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §01 EXECUTIVE SUMMARY -->
+    <div class="section" id="exec">
+      <div class="section-head"><span class="section-num">§ 01</span><h2 class="section-title">Executive summary</h2></div>
+      <div class="exec-list">
+        <div class="exec-item"><span class="exec-num">01</span><span>Michelangelo functions as Uber's internal AI/ML platform layer — production-tested at scale across classic ML, deep learning, LLMs, and now agents.</span></div>
+        <div class="exec-item"><span class="exec-num">02</span><span>Open source accelerates model training, experimentation, and infrastructure development. The platform is built on Ray, Kubernetes, PyTorch, DeepSpeed, Hugging Face, and vLLM.</span></div>
+        <div class="exec-item"><span class="exec-num">03</span><span>In-house systems convert open-source components into production-ready platform capability. The strategic value is the conversion, not the components themselves.</span></div>
+        <div class="exec-item"><span class="exec-num">04</span><span>The DevRel opportunity is likely about translating this platform story into practitioner trust, adoption, and clear technical education for external ML platform engineers.</span></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §02 CORPORATE OBJECTIVES -->
+    <div class="section" id="objectives">
+      <div class="section-head"><span class="section-num">§ 02</span><h2 class="section-title">Corporate objective mapping</h2></div>
+      <p class="section-sub">A read of how Michelangelo functions might map to Uber's stated technology objectives.</p>
+      <table class="obj-table">
+        <thead><tr><th>Objective</th><th>MA Function</th><th>OSS Angle</th></tr></thead>
+        <tbody>
+          <tr><td>Leading technology /<br>platform capability</td><td>Centralized internal ML platform — training, evaluation, scaling</td><td>Open-source frameworks accelerate frontier-model adoption</td></tr>
+          <tr><td>Developer velocity</td><td>CLI (mactl), Canvas, notebooks, JobSpec abstraction</td><td>Hugging Face, Ray Train reduce engineering effort</td></tr>
+          <tr><td>Production readiness</td><td>Federation across multi-cluster K8s, JobSpec lifecycle</td><td>Kubernetes + Ray + KubeRay as the orchestration backbone</td></tr>
+          <tr><td>Cost and throughput optimization</td><td>DeepSpeed ZeRO, flash attention, batch tuning, MFU benchmarks</td><td>Industry-standard MFU using OSS optimizers</td></tr>
+          <tr><td>Trust, reliability, evaluation</td><td>Offline LLM scorer, vLLM-based batch prediction, throughput benchmarks</td><td>Ray ActorPool + vLLM as the evaluation substrate</td></tr>
+          <tr><td>Open-source ecosystem credibility</td><td>MA OSS public repo, "good first issue" labels, contributor onboarding</td><td>External adoption signals platform durability beyond Uber</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §03 ARCHITECTURE -->
+    <div class="section" id="architecture">
+      <div class="section-head"><span class="section-num">§ 03</span><h2 class="section-title">Architecture interpretation</h2></div>
+      <p class="section-sub">Layered view of the platform stack as described in public engineering materials. Read bottom-up — hardware to business use case.</p>
+      <div class="arch-stack">
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 07</div><div class="arch-name">Business use cases</div></div><div class="arch-content"><span class="arch-pill">Eats recommendations</span><span class="arch-pill">Search</span><span class="arch-pill">Support chatbots</span><span class="arch-pill">Code development</span><span class="arch-pill">SQL generation</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 06</div><div class="arch-name">Model layer</div></div><div class="arch-content"><span class="arch-pill">Llama 2 / 3</span><span class="arch-pill">Mixtral</span><span class="arch-pill">Closed-source providers</span><span class="arch-pill">Fine-tuned internal models</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 05</div><div class="arch-name">Training stack</div></div><div class="arch-content"><span class="arch-pill">PyTorch</span><span class="arch-pill">Ray Train</span><span class="arch-pill">Hugging Face Transformers</span><span class="arch-pill">DeepSpeed</span><span class="arch-pill">NCCL</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 04</div><div class="arch-name">Orchestration</div></div><div class="arch-content"><span class="arch-pill">Kubernetes</span><span class="arch-pill">Ray</span><span class="arch-pill">KubeRay</span><span class="arch-pill">Federation Layer</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 03</div><div class="arch-name">Hardware</div></div><div class="arch-content"><span class="arch-pill">NVIDIA A100 (on-prem)</span><span class="arch-pill">NVIDIA H100 (Google Cloud)</span><span class="arch-pill">Crane infra stack</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 02</div><div class="arch-name">Evaluation / scoring</div></div><div class="arch-content"><span class="arch-pill">Offline LLM scorer</span><span class="arch-pill">vLLM</span><span class="arch-pill">Batch prediction</span><span class="arch-pill">MFU benchmarks</span></div></div>
+        <div class="arch-layer"><div class="arch-label"><div class="arch-num">Layer 01</div><div class="arch-name">Production decisions</div></div><div class="arch-content"><span class="arch-pill">Resource planning</span><span class="arch-pill">Model selection</span><span class="arch-pill">Scalability</span><span class="arch-pill">Cost-performance tradeoffs</span></div></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §04 OSS VS IN-HOUSE -->
+    <div class="section" id="oss">
+      <div class="section-head"><span class="section-num">§ 04</span><h2 class="section-title">Open source vs in-house</h2></div>
+      <p class="section-sub">Two columns. The strategic value lives in the conversion between them.</p>
+      <div class="oss-cols">
+        <div class="oss-col">
+          <div class="oss-col-label">Open source provides</div>
+          <ul class="oss-list">
+            <li class="oss-item">Speed — frontier techniques in days, not quarters</li>
+            <li class="oss-item">Reusable model ecosystems (Llama, Mixtral, Falcon)</li>
+            <li class="oss-item">Community-tested frameworks (Ray, DeepSpeed, vLLM)</li>
+            <li class="oss-item">Lower experimentation friction</li>
+            <li class="oss-item">Faster access to fine-tuning recipes (PEFT, LoRA, QLoRA)</li>
+          </ul>
+        </div>
+        <div class="oss-col">
+          <div class="oss-col-label">In-house platform provides</div>
+          <ul class="oss-list">
+            <li class="oss-item">Production integration at Uber-scale traffic</li>
+            <li class="oss-item">Multi-cluster federation and resource management</li>
+            <li class="oss-item">Governance, security, compliance posture</li>
+            <li class="oss-item">Reliability — 99.99% uptime targets</li>
+            <li class="oss-item">Domain-specific tuning (Eats menu, search semantics)</li>
+            <li class="oss-item">Internal business alignment</li>
+          </ul>
+        </div>
+      </div>
+      <div class="oss-quote">The strategic value is not open source alone. The value is converting open-source capability into reliable internal platform leverage.</div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- §05 SOURCE ARTICLE -->
+    <div class="section" id="source">
+      <div class="section-head"><span class="section-num">§ 05</span><h2 class="section-title">Source article</h2></div>
+      <div class="source-card">
+        <div class="source-label">Primary source</div>
+        <div class="source-title">Open Source and In-House: How Uber Optimizes LLM Training</div>
+        <div class="source-authors">Bo Ling, Jiapei Huang, Baojun Liu, Chongxiao Cao, Anant Vyas, Peng Zhang</div>
+        <div class="source-pub">Uber Engineering Blog · April 14, 2026</div>
+        <div class="source-points-label">Relevant points</div>
+        <ul class="source-points">
+          <li class="source-point">Llama 3 450B is on the near-term roadmap for fine-tuning support.</li>
+          <li class="source-point">Throughput optimization through DeepSpeed ZeRO-stage-3 CPU offload yielded 34% GPU memory reduction.</li>
+          <li class="source-point">Flash attention saves 50% GPU memory at the same batch size.</li>
+          <li class="source-point">mactl is the named CLI tool. Canvas + Notebooks complete the developer entry surface.</li>
+          <li class="source-point">Comet is the experiment tracking server. TerrBlob is the blob storage layer. HDFS is data ingest.</li>
+          <li class="source-point">The conclusion explicitly states open source as ecosystem strategy: embracing open source is the key to catching up with generative AI trends.</li>
+        </ul>
+        <a href="https://www.uber.com/blog/open-source-and-in-house-how-uber-optimizes-llm-training/" class="source-link" target="_blank">Read source →</a>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-tags"><span class="footer-tag">#MLOps</span><span class="footer-tag">#OpenSource</span><span class="footer-tag">#Michelangelo</span><span class="footer-tag">#UberEngineering</span></div>
+      <div class="footer-coming-label">More business use cases coming</div>
+      <div class="footer-coming-items">Box · Snowflake · Anthropic</div>
+      <div class="footer-bottom">
+        <div class="footer-meta">Built as a static business use case artifact for AI infrastructure analysis.<br>Independent public-source analysis. No affiliation with Uber implied.</div>
+        <div class="footer-sig">Jade Melody Walker · jademelody.com</div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+  </div><!-- /main-area -->
+</div><!-- /page-wrap -->
+</body>
+</html>
